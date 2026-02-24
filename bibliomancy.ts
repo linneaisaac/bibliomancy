@@ -1,7 +1,14 @@
-import { join } from "path";
+import { join } from "node:path";
 import {
-  parseVerses, filterVerses, searchVerses, listBooks, pickDaily, drawSpread,
-  OT_SET, CLUSTERS, SPREADS,
+  CLUSTERS,
+  drawSpread,
+  filterVerses,
+  listBooks,
+  OT_SET,
+  parseVerses,
+  pickDaily,
+  SPREADS,
+  searchVerses,
 } from "./lib";
 
 const filter = process.argv[2] ?? "all";
@@ -36,7 +43,9 @@ if (filtered.length === 0) {
   } else {
     console.error(`No verses found for filter: "${filter}"`);
   }
-  console.error('Use "all", "ot", "nt", a book name, a cluster (e.g., "gospels"), comma-separated books, or a range (e.g., "Isaiah-Amos").');
+  console.error(
+    'Use "all", "ot", "nt", a book name, a cluster (e.g., "gospels"), comma-separated books, or a range (e.g., "Isaiah-Amos").',
+  );
   console.error('Use "books" to list all available book names and clusters.');
   process.exit(1);
 }
@@ -61,7 +70,9 @@ if (spreadIdx !== -1) {
   }
 } else {
   const daily = process.argv.includes("--daily");
-  const chosen = daily ? pickDaily(filtered) : filtered[Math.floor(Math.random() * filtered.length)];
+  const chosen = daily
+    ? pickDaily(filtered)
+    : filtered[Math.floor(Math.random() * filtered.length)];
   console.log(`${chosen.reference}`);
   console.log(`${chosen.text}`);
 }

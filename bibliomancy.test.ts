@@ -1,9 +1,18 @@
 import { describe, expect, test } from "bun:test";
-import { writeFileSync, unlinkSync } from "fs";
-import { join } from "path";
+import { unlinkSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import {
-  parseVerses, filterVerses, resolveBookNames, searchVerses, listBooks, pickDaily, drawSpread,
-  OT_SET, NT_SET, CLUSTERS, SPREADS,
+  CLUSTERS,
+  drawSpread,
+  filterVerses,
+  listBooks,
+  NT_SET,
+  OT_SET,
+  parseVerses,
+  pickDaily,
+  resolveBookNames,
+  SPREADS,
+  searchVerses,
   type Verse,
 } from "./lib";
 
@@ -242,20 +251,20 @@ describe("resolveBookNames", () => {
   test("returns set for known cluster", () => {
     const result = resolveBookNames("gospels");
     expect(result).not.toBeNull();
-    expect(result!.has("Matthew")).toBe(true);
-    expect(result!.has("John")).toBe(true);
+    expect(result?.has("Matthew")).toBe(true);
+    expect(result?.has("John")).toBe(true);
   });
 
   test("returns set for comma-separated known books", () => {
     const result = resolveBookNames("Genesis,Exodus");
     expect(result).not.toBeNull();
-    expect(result!.size).toBe(2);
+    expect(result?.size).toBe(2);
   });
 
   test("returns set for valid range", () => {
     const result = resolveBookNames("Genesis-Deuteronomy");
     expect(result).not.toBeNull();
-    expect(result!.size).toBe(5);
+    expect(result?.size).toBe(5);
   });
 
   test("returns null if any comma-separated name is invalid", () => {
