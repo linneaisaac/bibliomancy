@@ -16,6 +16,9 @@ You'll be asked what section of the Bible to draw from:
 - **Old Testament** — the 39 OT books
 - **New Testament** — the 27 NT books
 - **Specific book** — name a book (e.g., Isaiah, Psalm, Proverbs)
+- **Common group** — a named cluster like `gospels`, `torah`, `wisdom`, `pauline`, `historical`, or `prophets`
+- **Multiple books** — comma-separated list (e.g., `"Isaiah,Jeremiah"`)
+- **Range of books** — two books joined by a hyphen, spanning all books between them in canonical order (e.g., `"Isaiah-Amos"`)
 
 If you choose a specific book, you'll be prompted to enter the book name. A random verse from your chosen section is then drawn and presented.
 
