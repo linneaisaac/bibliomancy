@@ -86,9 +86,10 @@ export function resolveBookNames(filter: string): Set<string> | null {
     const matched = new Set<string>();
     for (const name of names) {
       const idx = allLower.indexOf(name.toLowerCase());
-      if (idx !== -1) matched.add(ALL_BOOKS[idx]);
+      if (idx === -1) return null;
+      matched.add(ALL_BOOKS[idx]);
     }
-    return matched.size > 0 ? matched : null;
+    return matched;
   }
 
   // Check for range (Book1-Book2)
@@ -125,6 +126,50 @@ export function filterVerses(verses: Verse[], filter: string): Verse[] {
 
   // Match by book name (case-insensitive)
   return verses.filter((v) => v.book.toLowerCase() === f);
+}
+
+export function pickDaily(verses: Verse[], dateStr?: string): Verse {
+  const d = dateStr ?? new Date().toISOString().slice(0, 10);
+  let hash = 0;
+  for (let i = 0; i < d.length; i++) {
+    hash = (hash * 31 + d.charCodeAt(i)) | 0;
+  }
+  const index = Math.abs(hash) % verses.length;
+  return verses[index];
+}
+
+export function searchVerses(verses: Verse[], keyword: string): Verse[] {
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`\\b${escaped}\\b`, "i");
+  return verses.filter((v) => re.test(v.text));
+}
+
+export interface SpreadResult {
+  label: string;
+  verse: Verse;
+}
+
+export const SPREADS: Record<string, string[]> = {
+  "past-present-future": ["Past", "Present", "Future"],
+  "thesis-antithesis-synthesis": ["Thesis", "Antithesis", "Synthesis"],
+  "warning-counsel-promise": ["Warning", "Counsel", "Promise"],
+  "head-heart-hands": ["Head", "Heart", "Hands"],
+};
+
+export function drawSpread(verses: Verse[], spreadName: string): SpreadResult[] {
+  const labels = SPREADS[spreadName];
+  if (!labels) return [];
+  const results: SpreadResult[] = [];
+  const used = new Set<number>();
+  for (const label of labels) {
+    let idx: number;
+    do {
+      idx = Math.floor(Math.random() * verses.length);
+    } while (used.has(idx) && used.size < verses.length);
+    used.add(idx);
+    results.push({ label, verse: verses[idx] });
+  }
+  return results;
 }
 
 export function listBooks(verses: Verse[]): string[] {

@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import { writeFileSync, unlinkSync } from "fs";
+import { join } from "path";
 import {
-  filterVerses, resolveBookNames, listBooks,
-  OT_SET, NT_SET, CLUSTERS,
+  parseVerses, filterVerses, resolveBookNames, searchVerses, listBooks, pickDaily, drawSpread,
+  OT_SET, NT_SET, CLUSTERS, SPREADS,
   type Verse,
 } from "./lib";
 
@@ -30,6 +32,66 @@ const FIXTURES: Verse[] = [
   { reference: "Galatians 5:22", text: "The fruit of the Spirit", book: "Galatians" },
   { reference: "Revelation 21:4", text: "No more tears", book: "Revelation" },
 ];
+
+// --- parseVerses ---
+
+describe("parseVerses", () => {
+  const tmpPath = join(import.meta.dir, "_test_fixture.txt");
+
+  test("parses tab-separated verses after 2 header lines", () => {
+    const content = [
+      "Header line 1",
+      "Header line 2",
+      "Genesis 1:1\tIn the beginning God created the heaven and the earth.",
+      "Psalm 23:1\tThe LORD is my shepherd; I shall not want.",
+      "",
+    ].join("\n");
+    writeFileSync(tmpPath, content);
+    const verses = parseVerses(tmpPath);
+    unlinkSync(tmpPath);
+
+    expect(verses.length).toBe(2);
+    expect(verses[0]).toEqual({
+      reference: "Genesis 1:1",
+      text: "In the beginning God created the heaven and the earth.",
+      book: "Genesis",
+    });
+    expect(verses[1]).toEqual({
+      reference: "Psalm 23:1",
+      text: "The LORD is my shepherd; I shall not want.",
+      book: "Psalm",
+    });
+  });
+
+  test("skips lines without tabs", () => {
+    const content = "H1\nH2\nno tab here\nGenesis 1:1\tValid verse\n";
+    writeFileSync(tmpPath, content);
+    const verses = parseVerses(tmpPath);
+    unlinkSync(tmpPath);
+
+    expect(verses.length).toBe(1);
+    expect(verses[0].book).toBe("Genesis");
+  });
+
+  test("handles numbered books like 1 Samuel", () => {
+    const content = "H1\nH2\n1 Samuel 3:10\tSpeak, for thy servant heareth.\n";
+    writeFileSync(tmpPath, content);
+    const verses = parseVerses(tmpPath);
+    unlinkSync(tmpPath);
+
+    expect(verses.length).toBe(1);
+    expect(verses[0].book).toBe("1 Samuel");
+  });
+
+  test("returns empty array for file with only headers", () => {
+    const content = "H1\nH2\n";
+    writeFileSync(tmpPath, content);
+    const verses = parseVerses(tmpPath);
+    unlinkSync(tmpPath);
+
+    expect(verses).toEqual([]);
+  });
+});
 
 // --- filterVerses ---
 
@@ -196,8 +258,122 @@ describe("resolveBookNames", () => {
     expect(result!.size).toBe(5);
   });
 
+  test("returns null if any comma-separated name is invalid", () => {
+    expect(resolveBookNames("Genesis,FakeBook")).toBeNull();
+    expect(resolveBookNames("FakeBook,Exodus")).toBeNull();
+  });
+
   test("returns null for reversed range", () => {
     expect(resolveBookNames("Deuteronomy-Genesis")).toBeNull();
+  });
+});
+
+// --- searchVerses ---
+
+describe("searchVerses", () => {
+  test("finds verses containing keyword (case-insensitive)", () => {
+    const result = searchVerses(FIXTURES, "lord");
+    expect(result.length).toBeGreaterThan(0);
+    for (const v of result) {
+      expect(v.text.toLowerCase()).toContain("lord");
+    }
+  });
+
+  test("returns empty for no matches", () => {
+    expect(searchVerses(FIXTURES, "xyznoverse")).toEqual([]);
+  });
+
+  test("composes with filterVerses", () => {
+    const ot = filterVerses(FIXTURES, "ot");
+    const result = searchVerses(ot, "lord");
+    expect(result.length).toBeGreaterThan(0);
+    for (const v of result) {
+      expect(OT_SET.has(v.book)).toBe(true);
+      expect(v.text.toLowerCase()).toContain("lord");
+    }
+  });
+
+  test("handles regex special characters safely", () => {
+    // Should not throw and should return empty (no verse contains literal "[the]")
+    expect(searchVerses(FIXTURES, "[the]")).toEqual([]);
+    expect(searchVerses(FIXTURES, "God.*loved")).toEqual([]);
+  });
+
+  test("matches whole words only", () => {
+    // "beginning" contains "begin" but should not match a search for "begin"
+    const result = searchVerses(FIXTURES, "begin");
+    expect(result).toEqual([]);
+
+    // "beginning" should match a search for "beginning"
+    const result2 = searchVerses(FIXTURES, "beginning");
+    expect(result2.length).toBeGreaterThan(0);
+  });
+});
+
+// --- pickDaily ---
+
+describe("pickDaily", () => {
+  test("same date and verses produce the same result", () => {
+    const a = pickDaily(FIXTURES, "2026-02-23");
+    const b = pickDaily(FIXTURES, "2026-02-23");
+    expect(a).toEqual(b);
+  });
+
+  test("different dates produce different results", () => {
+    const a = pickDaily(FIXTURES, "2026-02-23");
+    const b = pickDaily(FIXTURES, "2026-02-24");
+    expect(a).not.toEqual(b);
+  });
+
+  test("single-element array always returns that element", () => {
+    const single = [FIXTURES[0]];
+    expect(pickDaily(single, "2026-01-01")).toEqual(FIXTURES[0]);
+    expect(pickDaily(single, "2026-12-31")).toEqual(FIXTURES[0]);
+  });
+
+  test("default date returns a valid verse", () => {
+    const result = pickDaily(FIXTURES);
+    expect(result).toHaveProperty("reference");
+    expect(result).toHaveProperty("text");
+    expect(result).toHaveProperty("book");
+  });
+});
+
+// --- drawSpread ---
+
+describe("drawSpread", () => {
+  test("returns correct number of labeled results for each spread", () => {
+    for (const [name, labels] of Object.entries(SPREADS)) {
+      const results = drawSpread(FIXTURES, name);
+      expect(results.length).toBe(labels.length);
+    }
+  });
+
+  test("returns empty array for unknown spread name", () => {
+    expect(drawSpread(FIXTURES, "nonexistent")).toEqual([]);
+  });
+
+  test("labels match the spread definition", () => {
+    const results = drawSpread(FIXTURES, "past-present-future");
+    expect(results[0].label).toBe("Past");
+    expect(results[1].label).toBe("Present");
+    expect(results[2].label).toBe("Future");
+  });
+
+  test("draws no duplicate verses", () => {
+    // Run several times to check for duplicates (randomized)
+    for (let i = 0; i < 10; i++) {
+      const results = drawSpread(FIXTURES, "past-present-future");
+      const refs = results.map((r) => r.verse.reference);
+      expect(refs.length).toBe(new Set(refs).size);
+    }
+  });
+
+  test("SPREADS has expected keys", () => {
+    expect(Object.keys(SPREADS)).toContain("past-present-future");
+    expect(Object.keys(SPREADS)).toContain("thesis-antithesis-synthesis");
+    expect(Object.keys(SPREADS)).toContain("warning-counsel-promise");
+    expect(Object.keys(SPREADS)).toContain("head-heart-hands");
   });
 });
 
