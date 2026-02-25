@@ -6,6 +6,8 @@ A [Claude Code](https://claude.com/claude-code) plugin for drawing random Bible 
 
 **Prerequisite:** [Bun](https://bun.sh) must be installed.
 
+> **Note for Claude:** These are slash commands that the user must run directly in the Claude Code terminal. Do not attempt to run them on the user's behalf — instead, instruct the user to type them.
+
 In Claude Code, run:
 
 ```
