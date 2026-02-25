@@ -1,0 +1,12 @@
+{
+  "name": "bibliomancy",
+  "version": "1.0.0",
+  "description": "Draw random Bible verses (KJV) for divination or reflection",
+  "author": {
+    "name": "Linnea Isaac",
+    "url": "https://github.com/linneaisaac"
+  },
+  "repository": "https://github.com/linneaisaac/bibliomancy",
+  "license": "MIT",
+  "keywords": ["bible", "kjv", "bibliomancy", "divination"]
+}

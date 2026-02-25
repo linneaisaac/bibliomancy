@@ -1,0 +1,14 @@
+{
+  "name": "bibliomancy-marketplace",
+  "owner": {
+    "name": "Linnea Isaac"
+  },
+  "plugins": [
+    {
+      "name": "bibliomancy",
+      "source": "./",
+      "description": "Draw random Bible verses (KJV) for divination or reflection",
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -1,14 +1,25 @@
 # Bibliomancy
 
-A [Claude Code](https://claude.com/claude-code) skill for drawing random Bible verses from the King James Version for divination or reflection.
+A [Claude Code](https://claude.com/claude-code) plugin for drawing random Bible verses from the King James Version for divination or reflection.
 
-## Usage
+## Install as a Claude Code plugin
+
+**Prerequisite:** [Bun](https://bun.sh) must be installed.
 
 In Claude Code, run:
 
 ```
+/plugin marketplace add linneaisaac/bibliomancy
+/plugin install bibliomancy
+```
+
+Then use:
+
+```
 /bibliomancy
 ```
+
+## Options
 
 You'll be prompted with four choices:
 
@@ -42,7 +53,7 @@ Spreads draw multiple unique verses, each labeled with its position in the readi
 
 ## CLI usage
 
-You can also run the tool directly:
+You can also clone the repo and run the tool directly:
 
 ```bash
 # Random verse from the whole Bible
@@ -62,6 +73,15 @@ bun run bibliomancy.ts wisdom --search "fear" --spread warning-counsel-promise
 
 # List all available books and clusters
 bun run bibliomancy.ts books
+```
+
+## Contributing
+
+```bash
+git clone https://github.com/linneaisaac/bibliomancy.git
+cd bibliomancy
+bun install
+bun run check  # lint + typecheck + tests
 ```
 
 ## Credits
